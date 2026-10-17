@@ -13,11 +13,7 @@ class BurstHandler {
     if (this.refillTimer) return;
         
     this.refillTimer = setTimeout(() => {
-      if (this.refillTimer) {
-        clearTimeout(this.refillTimer);
-        this.refillTimer = null;
-      }
-
+      this.refillTimer = null;
       this.tokens++;
 
       console.log(`Token refilled: ${this.tokens}`);
@@ -30,6 +26,7 @@ class BurstHandler {
   applyFirearm(firearm: Firearm) {
     const tokenRatio = this.tokens / this.tokensMax;
 
+    this.usageCdMs = Math.floor(firearm.fireRate * 1250);
     this.tokensMax = Math.floor(5 / firearm.fireRate);
 
     if (Number.isNaN(tokenRatio)) {
@@ -39,8 +36,6 @@ class BurstHandler {
         this.refillTimer = null;
       }
     } else this.tokens = Math.floor(this.tokensMax * tokenRatio);
-
-    this.usageCdMs = Math.floor(firearm.fireRate * 1250);
 
     console.log(
       `Token Ratio: ${tokenRatio}`,
