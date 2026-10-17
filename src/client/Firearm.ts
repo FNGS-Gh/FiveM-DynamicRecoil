@@ -1,15 +1,16 @@
 import { WpHash } from './utils';
 
-export class Weapon {
+export class Firearm {
+  private readonly baseRecoil: number;
+
   readonly group: number;
   readonly fireRate: number;
+  readonly recoil: number;
 
   constructor(readonly hash: number) {
     this.group = GetWeapontypeGroup(hash);
     this.fireRate = GetWeaponTimeBetweenShots(hash);
-  }
-
-  static get unarmed(): Weapon {
-    return new Weapon(GetHashKey(WpHash.Unarmed));
+    this.baseRecoil = GetWeaponRecoilShakeAmplitude(hash);
+    this.recoil = this.baseRecoil;
   }
 }

@@ -1,19 +1,17 @@
-import { Config } from './config';
+import { Level } from './config';
 import { ValidatePed } from './utils';
-import { Weapon } from './Weapon';
+import { Firearm } from './Firearm';
 
 class PedInfo {
   private _id = PlayerPedId();
-  private _interval: NodeJS.Timeout | null = null;
 
-  tickThread = false;
   player = PlayerId();
-  weapon = Weapon.unarmed;
+  firearm: Firearm | null = null;
 
-  constructor(
-    private readonly canRoll: boolean,
-    private readonly canHipFire: boolean,
-  ) {}
+  interval: NodeJS.Timeout | null = null;
+  tickThread = false;
+
+  constructor(public level: Level) {}
 
   get id() {
     return this._id;
@@ -24,30 +22,30 @@ class PedInfo {
     this._id = ped;
   }
 
-  get interval(): NodeJS.Timeout | null {
-    return this._interval;
-  }
-
-  set interval(interval: NodeJS.Timeout) {
-    if (this._interval) clearInterval(interval);
-    else this._interval = interval;
-  }
-
   checkWeapon() {
-    const hash = GetCurrentPedWeapon(this.id);
-    if (this.weapon.hash !== hash)
-      this.weapon = new Weapon(hash);
+    const [armed, hash] = GetCurrentPedWeapon(this.id, true);
+
+    console.log(this.firearm);
+
+    if (!armed || !IsPedArmed(this.id, 4)) {
+      if (this.firearm) this.firearm = null;
+      return;
+    }
+
+    if (this.firearm?.hash !== hash)
+      this.firearm = new Firearm(hash);
   }
 
   checkMovement() {
 
   }
+
+  restrict() {
+
+  }
 }
 
-const Ped = new PedInfo(
-  Config.canRoll,
-  Config.canHipFire
-);
+const Ped = new PedInfo(Level.NONE);
 
 on('playerSpawned', () => {
   Ped.player = PlayerId();
@@ -60,6 +58,8 @@ on('playerSpawned', () => {
     });
   }
 
+  if (Ped.interval) clearInterval(Ped.interval);
+  
   Ped.interval = setInterval(() => {
     Ped.checkWeapon();
   }, 250);

@@ -5,7 +5,7 @@ export enum WpHash {
 export const ValidatePed = (argIdx = 0) => {
   return function (
     _target: any,
-    _propKey: string,
+    _propertyKey: string,
     descriptor: PropertyDescriptor
   ) {
     const initMethod = descriptor.set || descriptor.value;
