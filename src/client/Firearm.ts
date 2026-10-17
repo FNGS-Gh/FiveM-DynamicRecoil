@@ -1,5 +1,3 @@
-import { WpHash } from './utils';
-
 export class Firearm {
   private readonly baseRecoil: number;
 
@@ -12,5 +10,11 @@ export class Firearm {
     this.fireRate = GetWeaponTimeBetweenShots(hash);
     this.baseRecoil = GetWeaponRecoilShakeAmplitude(hash);
     this.recoil = this.baseRecoil;
+
+    console.log(
+      `Group: ${this.group}`,
+      `FireRate: ${this.fireRate}`,
+      `Recoil: ${this.baseRecoil}`
+    );
   }
 }

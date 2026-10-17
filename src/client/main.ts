@@ -1,6 +1,6 @@
-import { Level } from './config';
-import { ValidatePed } from './utils';
+import { LevelPayload, TokensMs, ValidatePed } from './utils';
 import { Firearm } from './Firearm';
+import { Burst } from './Burst';
 
 class PedInfo {
   private _id = PlayerPedId();
@@ -8,10 +8,12 @@ class PedInfo {
   player = PlayerId();
   firearm: Firearm | null = null;
 
+  amplifier = 1.0;
+  dropHeavy = false;
+  dropOnBlind = false;
+
   interval: NodeJS.Timeout | null = null;
   tickThread = false;
-
-  constructor(public level: Level) {}
 
   get id() {
     return this._id;
@@ -22,18 +24,20 @@ class PedInfo {
     this._id = ped;
   }
 
+  private setWeapon(hash: number) {
+    this.firearm = new Firearm(hash);
+    Burst.applyFirearm(this.firearm);
+  }
+
   checkWeapon() {
     const [armed, hash] = GetCurrentPedWeapon(this.id, true);
 
-    console.log(this.firearm);
-
     if (!armed || !IsPedArmed(this.id, 4)) {
-      if (this.firearm) this.firearm = null;
+      this.firearm = null;
       return;
     }
 
-    if (this.firearm?.hash !== hash)
-      this.firearm = new Firearm(hash);
+    if (this.firearm?.hash !== hash) this.setWeapon(hash);
   }
 
   checkMovement() {
@@ -45,7 +49,7 @@ class PedInfo {
   }
 }
 
-const Ped = new PedInfo(Level.NONE);
+const Ped = new PedInfo;
 
 on('playerSpawned', () => {
   Ped.player = PlayerId();
@@ -54,7 +58,8 @@ on('playerSpawned', () => {
   if (!Ped.tickThread) {
     Ped.tickThread = true;
     setTick(() => {
-
+      if (Ped.firearm && IsPedShooting(Ped.id))
+        Burst.useToken();
     });
   }
 
@@ -67,4 +72,10 @@ on('playerSpawned', () => {
 
 on('PedChanged', (ped: number) => {
   Ped.id = ped;
+});
+
+on('Recoil:ApplyLevel', (payload: LevelPayload) => {
+  Ped.amplifier = payload.amplifier;
+  Ped.dropHeavy = payload.dropHeavy;
+  Ped.dropOnBlind = payload.dropOnBlind;
 });

@@ -24,7 +24,7 @@ The `config.json` file can be modified anytime with no need to rebuild the scrip
 ---
 
 ###
-If you want to modify the code, you'll find the source TypeScript files within the `src/` folder. Please note that this repo doesn't contain any TS builder and etc, so you'll need to set up your dev environment accordingly.
+If you want to modify the code, you'll find the source TypeScript files within the `src/` folder. Please note that this repo doesn't contain any TS builder and etc, so you'll need to set up your dev environment accordingly. Additionally, I want to mention that I use decorators here, so the `tsconfig` setup needs to support them too.
 
 Also make sure that you have the `@citizenfx` packages:
 
@@ -35,6 +35,20 @@ npm install -D typescript @citizenfx/client @citizenfx/server
 ## 2. Description
 
 This
+
+### Client Events (inbound):
+
+`Recoil:ApplyLevel` - can be executed from another resource to apply custom flags for an individual player.
+
+It accepts the `payload` argument, which implements the following interface:
+
+```ts
+interface LevelPayload {
+  amplifier: number;
+  dropHeavy: boolean;
+  dropOnBlind: boolean;
+}
+```
 
 ## 3. Known Issues
 
