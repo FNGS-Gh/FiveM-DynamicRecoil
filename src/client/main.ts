@@ -26,7 +26,7 @@ class PedInfo {
 
   private setWeapon(hash: number) {
     this.firearm = new Firearm(hash);
-    Burst.applyFirearm(this.firearm);
+    Burst.applyFirearm(this.firearm.fireRate);
   }
 
   checkWeapon() {

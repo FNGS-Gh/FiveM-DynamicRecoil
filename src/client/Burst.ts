@@ -1,4 +1,3 @@
-import { Firearm } from './Firearm';
 import { TokensMs } from './utils';
 
 class BurstHandler {
@@ -23,11 +22,11 @@ class BurstHandler {
     }, TokensMs.REFILL);
   }
 
-  applyFirearm(firearm: Firearm) {
+  applyFirearm(fireRate: number) {
     const tokenRatio = this.tokens / this.tokensMax;
 
-    this.usageCdMs = Math.floor(firearm.fireRate * 1250);
-    this.tokensMax = Math.floor(5 / firearm.fireRate);
+    this.usageCdMs = Math.floor(fireRate * 1250);
+    this.tokensMax = Math.floor(5 / fireRate);
 
     if (Number.isNaN(tokenRatio)) {
       this.tokens = this.tokensMax;
