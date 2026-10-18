@@ -1,4 +1,4 @@
-import { LevelPayload, TokensMs, ValidatePed } from './utils';
+import { LevelPayload, ValidatePed } from './utils';
 import { Firearm } from './Firearm';
 import { Burst } from './Burst';
 
@@ -26,7 +26,7 @@ class PedInfo {
 
   private setWeapon(hash: number) {
     this.firearm = new Firearm(hash);
-    Burst.applyFirearm(this.firearm);
+    Burst.applyFirearm(this.firearm.fireRate);
   }
 
   checkWeapon() {
@@ -70,7 +70,7 @@ on('playerSpawned', () => {
   }, 250);
 });
 
-on('PedChanged', (ped: number) => {
+on('PedChanged', (ped: number) => { // Edit 'PedChanged' to whatever client event handles player's ped change
   Ped.id = ped;
 });
 
