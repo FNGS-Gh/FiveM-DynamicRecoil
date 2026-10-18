@@ -1,11 +1,9 @@
-import { LevelPayload, ValidatePed } from './utils';
+import { LevelPayload } from './utils';
 import { Firearm } from './Firearm';
 import { Burst } from './Burst';
+import { PlayerInfo } from './Player';
 
-class PedInfo {
-  private _id = PlayerPedId();
-
-  player = PlayerId();
+class RecoilHandler extends PlayerInfo {
   firearm: Firearm | null = null;
 
   amplifier = 1.0;
@@ -15,24 +13,15 @@ class PedInfo {
   interval: NodeJS.Timeout | null = null;
   tickThread = false;
 
-  get id() {
-    return this._id;
-  }
-
-  @ValidatePed()
-  set id(ped: number) {
-    this._id = ped;
-  }
-
   private setWeapon(hash: number) {
-    this.firearm = new Firearm(hash);
+    this.firearm = new Firearm(hash, this.amplifier);
     Burst.applyFirearm(this.firearm.fireRate);
   }
 
   checkWeapon() {
-    const [armed, hash] = GetCurrentPedWeapon(this.id, true);
+    const [armed, hash] = GetCurrentPedWeapon(this.ped, true);
 
-    if (!armed || !IsPedArmed(this.id, 4)) {
+    if (!armed || !IsPedArmed(this.ped, 4)) {
       this.firearm = null;
       return;
     }
@@ -49,33 +38,26 @@ class PedInfo {
   }
 }
 
-const Ped = new PedInfo;
+const Recoil = new RecoilHandler;
 
 on('playerSpawned', () => {
-  Ped.player = PlayerId();
-  Ped.id = PlayerPedId();
-
-  if (!Ped.tickThread) {
-    Ped.tickThread = true;
+  if (!Recoil.tickThread) {
+    Recoil.tickThread = true;
     setTick(() => {
-      if (Ped.firearm && IsPedShooting(Ped.id))
+      if (Recoil.firearm && IsPedShooting(Recoil.ped))
         Burst.useToken();
     });
   }
 
-  if (Ped.interval) clearInterval(Ped.interval);
+  if (Recoil.interval) clearInterval(Recoil.interval);
   
-  Ped.interval = setInterval(() => {
-    Ped.checkWeapon();
+  Recoil.interval = setInterval(() => {
+    Recoil.checkWeapon();
   }, 250);
 });
 
-on('PedChanged', (ped: number) => { // Edit 'PedChanged' to whatever client event handles player's ped change
-  Ped.id = ped;
-});
-
 on('Recoil:ApplyLevel', (payload: LevelPayload) => {
-  Ped.amplifier = payload.amplifier;
-  Ped.dropHeavy = payload.dropHeavy;
-  Ped.dropOnBlind = payload.dropOnBlind;
+  Recoil.amplifier = payload.amplifier;
+  Recoil.dropHeavy = payload.dropHeavy;
+  Recoil.dropOnBlind = payload.dropOnBlind;
 });

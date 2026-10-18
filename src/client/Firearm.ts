@@ -5,10 +5,10 @@ export class Firearm {
   readonly fireRate: number;
   readonly recoil: number;
 
-  constructor(readonly hash: number) {
+  constructor(readonly hash: number, amplifier: number = 1.0) {
     this.group = GetWeapontypeGroup(hash);
     this.fireRate = GetWeaponTimeBetweenShots(hash);
-    this.baseRecoil = GetWeaponRecoilShakeAmplitude(hash);
+    this.baseRecoil = GetWeaponRecoilShakeAmplitude(hash) * amplifier;
     this.recoil = this.baseRecoil;
 
     console.log(
@@ -17,4 +17,6 @@ export class Firearm {
       `Recoil: ${this.baseRecoil}`
     );
   }
+
+  //amplifyRecoil()
 }
