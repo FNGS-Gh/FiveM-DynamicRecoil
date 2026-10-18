@@ -1,4 +1,4 @@
-import { LevelPayload, TokensMs, ValidatePed } from './utils';
+import { LevelPayload, ValidatePed } from './utils';
 import { Firearm } from './Firearm';
 import { Burst } from './Burst';
 
@@ -70,7 +70,7 @@ on('playerSpawned', () => {
   }, 250);
 });
 
-on('PedChanged', (ped: number) => {
+on('PedChanged', (ped: number) => { // Edit 'PedChanged' to whatever client event handles player's ped change
   Ped.id = ped;
 });
 

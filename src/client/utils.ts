@@ -2,8 +2,9 @@ export enum WpHash {
   Unarmed = 'WEAPON_UNARMED'
 }
 
-export enum TokensMs {
-  REFILL = 1500
+export enum Tokens {
+  MAX = 10,
+  REFILL_MS = 1500
 }
 
 export interface LevelPayload {
