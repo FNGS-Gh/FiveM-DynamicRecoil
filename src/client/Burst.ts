@@ -9,6 +9,10 @@ class BurstHandler {
 
   private tokens = Tokens.MAX;
 
+  get tokensUsed(): number {
+    return Tokens.MAX - this.tokens;
+  }
+
   private scheduleRefill() {
     if (this.refillTimer) return;
         
@@ -50,7 +54,7 @@ class BurstHandler {
       this.scheduleRefill();
     }
 
-    return this.tokens;
+    return this.tokensUsed;
   }
 }
 

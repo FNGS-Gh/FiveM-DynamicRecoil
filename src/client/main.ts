@@ -4,11 +4,15 @@ import { Burst } from './Burst';
 import { PlayerInfo } from './Player';
 
 class RecoilHandler extends PlayerInfo {
+  private still = false;
+  private stealth = false;
+  private running = false;
+  private sprinting = false;
+  private aiming = false;
+
   firearm: Firearm | null = null;
 
   amplifier = 1.0;
-  dropHeavy = false;
-  dropOnBlind = false;
 
   interval: NodeJS.Timeout | null = null;
   tickThread = false;
@@ -16,6 +20,7 @@ class RecoilHandler extends PlayerInfo {
   private setWeapon(hash: number) {
     this.firearm = new Firearm(hash, this.amplifier);
     Burst.applyFirearm(this.firearm.fireRate);
+    this.firearm.applyBurst(Burst.tokensUsed);
   }
 
   checkWeapon() {
@@ -29,11 +34,18 @@ class RecoilHandler extends PlayerInfo {
     if (this.firearm?.hash !== hash) this.setWeapon(hash);
   }
 
-  checkMovement() {
-
+  checkShooting() {
+    if (this.firearm) {
+      if (IsPedShooting(this.ped))
+        this.firearm.applyBurst(Burst.useToken());
+      else if (
+        this.firearm.burstRate !== 0
+        && !IsControlPressed(0, 24)
+      ) this.firearm.applyBurst(Burst.tokensUsed);
+    }
   }
 
-  restrict() {
+  checkMovement() {
 
   }
 }
@@ -44,8 +56,7 @@ on('playerSpawned', () => {
   if (!Recoil.tickThread) {
     Recoil.tickThread = true;
     setTick(() => {
-      if (Recoil.firearm && IsPedShooting(Recoil.ped))
-        Burst.useToken();
+      Recoil.checkShooting();
     });
   }
 
@@ -56,8 +67,6 @@ on('playerSpawned', () => {
   }, 250);
 });
 
-on('Recoil:ApplyLevel', (payload: LevelPayload) => {
-  Recoil.amplifier = payload.amplifier;
-  Recoil.dropHeavy = payload.dropHeavy;
-  Recoil.dropOnBlind = payload.dropOnBlind;
+on('Recoil:ApplyAmplifier', (amplifier: number) => {
+  Recoil.amplifier = amplifier;
 });

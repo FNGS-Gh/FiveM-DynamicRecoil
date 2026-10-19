@@ -38,17 +38,10 @@ This
 
 ### Client Events (inbound):
 
-`Recoil:ApplyLevel` - can be executed from another resource to apply custom flags for an individual player.
+`Recoil:ApplyAmplifier` - can be executed from another resource to apply custom recoil amplifier for an individual player.
 
-It accepts the `payload` argument, which implements the following interface:
-
-```ts
-interface LevelPayload {
-  amplifier: number;
-  dropHeavy: boolean;
-  dropOnBlind: boolean;
-}
-```
+`Recoil:ApplyAmplifier` argument:\
+• `amplifier`: `number` - the amplifier value `[0, ∞)`.
 
 ## 3. Known Issues
 
