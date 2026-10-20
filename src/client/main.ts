@@ -1,38 +1,32 @@
-import { LevelPayload, ValidatePed } from './utils';
+import { LevelPayload } from './utils';
 import { Firearm } from './Firearm';
 import { Burst } from './Burst';
+import { PlayerInfo } from './Player';
 
-class PedInfo {
-  private _id = PlayerPedId();
+class RecoilHandler extends PlayerInfo {
+  private still = false;
+  private stealth = false;
+  private running = false;
+  private sprinting = false;
+  private aiming = false;
 
-  player = PlayerId();
   firearm: Firearm | null = null;
 
   amplifier = 1.0;
-  dropHeavy = false;
-  dropOnBlind = false;
 
   interval: NodeJS.Timeout | null = null;
   tickThread = false;
 
-  get id() {
-    return this._id;
-  }
-
-  @ValidatePed()
-  set id(ped: number) {
-    this._id = ped;
-  }
-
   private setWeapon(hash: number) {
-    this.firearm = new Firearm(hash);
+    this.firearm = new Firearm(hash, this.amplifier);
     Burst.applyFirearm(this.firearm.fireRate);
+    this.firearm.applyBurst(Burst.tokensUsed);
   }
 
   checkWeapon() {
-    const [armed, hash] = GetCurrentPedWeapon(this.id, true);
+    const [armed, hash] = GetCurrentPedWeapon(this.ped, true);
 
-    if (!armed || !IsPedArmed(this.id, 4)) {
+    if (!armed || !IsPedArmed(this.ped, 4)) {
       this.firearm = null;
       return;
     }
@@ -40,42 +34,67 @@ class PedInfo {
     if (this.firearm?.hash !== hash) this.setWeapon(hash);
   }
 
-  checkMovement() {
-
+  checkShooting() {
+    if (this.firearm) {
+      if (IsPedShooting(this.ped))
+        this.firearm.applyBurst(Burst.useToken());
+      else if (
+        this.firearm.burstRate !== 0
+        && !IsControlPressed(0, 24)
+      ) this.firearm.applyBurst(Burst.tokensUsed);
+    }
   }
 
-  restrict() {
+  checkMovement() {
+    if (!this.firearm) return;
 
+    let amplifier = 1.0;
+
+    if (IsPedInAnyVehicle(this.ped, false)) {
+      const vehicle = GetVehiclePedIsUsing(this.ped);
+      amplifier += 0.75;
+
+      if (GetEntitySpeed(vehicle) > 2.5)
+        amplifier += 1.0;
+      
+      if (this.ped === GetPedInVehicleSeat(vehicle, -1))
+        amplifier += 1.5;
+    } else {
+      if (GetPedStealthMovement(this.ped))
+        amplifier -= 0.1;
+
+      if (!IsPlayerFreeAiming(this.player))
+        amplifier += 1.0;
+
+      if (IsPedWalking(this.ped))
+        amplifier += 0.5;
+      else if (IsPedRunning(this.ped))
+        amplifier += 0.75;
+    }
+
+    this.firearm.amplifier = amplifier;
   }
 }
 
-const Ped = new PedInfo;
+const Recoil = new RecoilHandler;
 
 on('playerSpawned', () => {
-  Ped.player = PlayerId();
-  Ped.id = PlayerPedId();
-
-  if (!Ped.tickThread) {
-    Ped.tickThread = true;
+  if (!Recoil.tickThread) {
+    Recoil.tickThread = true;
     setTick(() => {
-      if (Ped.firearm && IsPedShooting(Ped.id))
-        Burst.useToken();
+      Recoil.checkShooting();
+      Recoil.checkMovement();
     });
   }
 
-  if (Ped.interval) clearInterval(Ped.interval);
+  if (Recoil.interval) clearInterval(Recoil.interval);
   
-  Ped.interval = setInterval(() => {
-    Ped.checkWeapon();
+  Recoil.interval = setInterval(() => {
+    Recoil.checkWeapon();
+    //Recoil.checkMovement();
   }, 250);
 });
 
-on('PedChanged', (ped: number) => { // Edit 'PedChanged' to whatever client event handles player's ped change
-  Ped.id = ped;
-});
-
-on('Recoil:ApplyLevel', (payload: LevelPayload) => {
-  Ped.amplifier = payload.amplifier;
-  Ped.dropHeavy = payload.dropHeavy;
-  Ped.dropOnBlind = payload.dropOnBlind;
+on('Recoil:ApplyAmplifier', (amplifier: number) => {
+  Recoil.amplifier = amplifier;
 });

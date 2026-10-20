@@ -3,7 +3,7 @@ game 'gta5'
 
 author 'Ghost'
 description 'Dynamic weapon recoil overhaul.'
-version '1.0.2'
+version '1.0.3'
 
 client_script 'dist/client.js'
 --server_script 'dist/server.js'
