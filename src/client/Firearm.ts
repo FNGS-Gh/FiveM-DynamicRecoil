@@ -4,6 +4,7 @@ export class Firearm {
   private readonly baseRecoil: number;
   private _recoil = 0;
   private _burstRate = 0;
+  private _amplifier = 1.0;
 
   readonly group: number;
   readonly fireRate: number;
@@ -43,6 +44,19 @@ export class Firearm {
     this._burstRate = rate;
   }
 
+  set amplifier(amplifier: number) {
+    if (this.amplifier === amplifier) return;
+
+    if (this.burstRate === 0)
+      this.recoil = this.baseRecoil * amplifier;
+
+    this._amplifier = amplifier;
+  }
+
+  get amplifier(): number {
+    return this._amplifier;
+  }
+
   get recoil(): number {
     return this._recoil;
   }
@@ -61,7 +75,7 @@ export class Firearm {
 
     this.burstRate = rate;
 
-    const amplifier = 1.0 + rate * 0.1;
+    const amplifier = this.amplifier * (1.0 + rate * 0.05);
     this.recoil = this.baseRecoil * amplifier;
   }
 }

@@ -4,7 +4,7 @@ export enum WpHash {
 
 export enum Tokens {
   MAX = 10,
-  REFILL_MS = 1200
+  REFILL_MS = 750
 }
 
 export interface LevelPayload {

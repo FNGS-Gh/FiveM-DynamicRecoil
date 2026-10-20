@@ -46,7 +46,33 @@ class RecoilHandler extends PlayerInfo {
   }
 
   checkMovement() {
+    if (!this.firearm) return;
 
+    let amplifier = 1.0;
+
+    if (IsPedInAnyVehicle(this.ped, false)) {
+      const vehicle = GetVehiclePedIsUsing(this.ped);
+      amplifier += 0.75;
+
+      if (GetEntitySpeed(vehicle) > 2.5)
+        amplifier += 1.0;
+      
+      if (this.ped === GetPedInVehicleSeat(vehicle, -1))
+        amplifier += 1.5;
+    } else {
+      if (GetPedStealthMovement(this.ped))
+        amplifier -= 0.1;
+
+      if (!IsPlayerFreeAiming(this.player))
+        amplifier += 1.0;
+
+      if (IsPedWalking(this.ped))
+        amplifier += 0.5;
+      else if (IsPedRunning(this.ped))
+        amplifier += 0.75;
+    }
+
+    this.firearm.amplifier = amplifier;
   }
 }
 
@@ -57,6 +83,7 @@ on('playerSpawned', () => {
     Recoil.tickThread = true;
     setTick(() => {
       Recoil.checkShooting();
+      Recoil.checkMovement();
     });
   }
 
@@ -64,6 +91,7 @@ on('playerSpawned', () => {
   
   Recoil.interval = setInterval(() => {
     Recoil.checkWeapon();
+    //Recoil.checkMovement();
   }, 250);
 });
 
