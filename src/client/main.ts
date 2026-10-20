@@ -4,11 +4,7 @@ import { Burst } from './Burst';
 import { PlayerInfo } from './Player';
 
 class RecoilHandler extends PlayerInfo {
-  private still = false;
-  private stealth = false;
-  private running = false;
-  private sprinting = false;
-  private aiming = false;
+  private hipRestrict = false;
 
   firearm: Firearm | null = null;
 
@@ -35,14 +31,19 @@ class RecoilHandler extends PlayerInfo {
   }
 
   checkShooting() {
-    if (this.firearm) {
-      if (IsPedShooting(this.ped))
-        this.firearm.applyBurst(Burst.useToken());
-      else if (
-        this.firearm.burstRate !== 0
-        && !IsControlPressed(0, 24)
-      ) this.firearm.applyBurst(Burst.tokensUsed);
+    if (!this.firearm) return;
+
+    if (!IsPlayerFreeAiming(this.player)) {
+      DisablePlayerFiring(this.player, true);
+      return;
     }
+
+    if (IsPedShooting(this.ped))
+      this.firearm.applyBurst(Burst.useToken());
+    else if (
+      this.firearm.burstRate !== 0
+      && !IsControlPressed(0, 24)
+    ) this.firearm.applyBurst(Burst.tokensUsed);
   }
 
   checkMovement() {
@@ -51,20 +52,17 @@ class RecoilHandler extends PlayerInfo {
     let amplifier = 1.0;
 
     if (IsPedInAnyVehicle(this.ped, false)) {
-      const vehicle = GetVehiclePedIsUsing(this.ped);
-      amplifier += 0.75;
+      // const vehicle = GetVehiclePedIsUsing(this.ped);
+      // amplifier += 0.75;
 
-      if (GetEntitySpeed(vehicle) > 2.5)
-        amplifier += 1.0;
+      // if (GetEntitySpeed(vehicle) > 2.5)
+      //   amplifier += 1.0;
       
-      if (this.ped === GetPedInVehicleSeat(vehicle, -1))
-        amplifier += 1.5;
+      // if (this.ped === GetPedInVehicleSeat(vehicle, -1))
+      //   amplifier += 1.5;
     } else {
       if (GetPedStealthMovement(this.ped))
-        amplifier -= 0.1;
-
-      if (!IsPlayerFreeAiming(this.player))
-        amplifier += 1.0;
+        amplifier -= 0.25;
 
       if (IsPedWalking(this.ped))
         amplifier += 0.5;
@@ -83,7 +81,6 @@ on('playerSpawned', () => {
     Recoil.tickThread = true;
     setTick(() => {
       Recoil.checkShooting();
-      Recoil.checkMovement();
     });
   }
 
@@ -91,7 +88,7 @@ on('playerSpawned', () => {
   
   Recoil.interval = setInterval(() => {
     Recoil.checkWeapon();
-    //Recoil.checkMovement();
+    Recoil.checkMovement();
   }, 250);
 });
 

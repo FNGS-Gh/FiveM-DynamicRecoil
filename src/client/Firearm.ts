@@ -65,17 +65,12 @@ export class Firearm {
     return this._burstRate;
   }
 
-  amplifyRecoil(amplifier: number) {
-    console.log(`Amplifier: ${amplifier}`);
-    this.recoil *= amplifier;
-  }
-
   applyBurst(rate: number) {
     if (this.burstRate === rate) return;
 
     this.burstRate = rate;
 
-    const amplifier = this.amplifier * (1.0 + rate * 0.05);
+    const amplifier = this.amplifier * (1.0 + rate * 0.01);
     this.recoil = this.baseRecoil * amplifier;
   }
 }
