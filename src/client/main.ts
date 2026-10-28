@@ -1,14 +1,10 @@
-import { LevelPayload } from './utils';
 import { Firearm } from './Firearm';
 import { Burst } from './Burst';
 import { PlayerInfo } from './Player';
 
 class RecoilHandler extends PlayerInfo {
-  private still = false;
-  private stealth = false;
-  private running = false;
-  private sprinting = false;
-  private aiming = false;
+  private lastVehShot = 0;
+  private inVehicle = false;
 
   firearm: Firearm | null = null;
 
@@ -35,44 +31,57 @@ class RecoilHandler extends PlayerInfo {
   }
 
   checkShooting() {
-    if (this.firearm) {
-      if (IsPedShooting(this.ped))
-        this.firearm.applyBurst(Burst.useToken());
-      else if (
-        this.firearm.burstRate !== 0
-        && !IsControlPressed(0, 24)
-      ) this.firearm.applyBurst(Burst.tokensUsed);
+    if (!IsPlayerFreeAiming(this.player)) {
+      DisablePlayerFiring(this.player, true);
+      return;
     }
+
+    if (IsPedShooting(this.ped))
+      this.firearm!.applyBurst(Burst.useToken());
+    else if (
+      this.firearm!.burstRate !== 0
+      && !IsControlPressed(0, 24)
+    ) this.firearm!.applyBurst(Burst.tokensUsed);
+  }
+
+  checkVehicle() {
+    if (IsPedInAnyVehicle(this.ped, false)) {
+      if (!this.inVehicle) this.inVehicle = true;
+
+      const now = GetGameTimer();
+
+      if (!IsPedShooting(this.ped) || now - this.lastVehShot < 250)
+        return;
+
+      this.lastVehShot = now;
+
+      const vehicle = GetVehiclePedIsUsing(this.ped);
+      let shake = 1.75;
+
+      if (GetEntitySpeed(vehicle) > 2.5)
+        shake += 1.0;
+      
+      if (this.ped === GetPedInVehicleSeat(vehicle, -1))
+        shake += 1.5;
+
+      ShakeGameplayCam('CARBINE_RIFLE_RECOIL_SHAKE', shake);
+    } else if (this.inVehicle) this.inVehicle = true;
   }
 
   checkMovement() {
-    if (!this.firearm) return;
+    if (this.inVehicle) return;
 
     let amplifier = 1.0;
 
-    if (IsPedInAnyVehicle(this.ped, false)) {
-      const vehicle = GetVehiclePedIsUsing(this.ped);
+    if (GetPedStealthMovement(this.ped))
+      amplifier -= 0.25;
+
+    if (IsPedWalking(this.ped))
+      amplifier += 0.5;
+    else if (IsPedRunning(this.ped))
       amplifier += 0.75;
 
-      if (GetEntitySpeed(vehicle) > 2.5)
-        amplifier += 1.0;
-      
-      if (this.ped === GetPedInVehicleSeat(vehicle, -1))
-        amplifier += 1.5;
-    } else {
-      if (GetPedStealthMovement(this.ped))
-        amplifier -= 0.1;
-
-      if (!IsPlayerFreeAiming(this.player))
-        amplifier += 1.0;
-
-      if (IsPedWalking(this.ped))
-        amplifier += 0.5;
-      else if (IsPedRunning(this.ped))
-        amplifier += 0.75;
-    }
-
-    this.firearm.amplifier = amplifier;
+    this.firearm!.amplifier = amplifier;
   }
 }
 
@@ -82,8 +91,10 @@ on('playerSpawned', () => {
   if (!Recoil.tickThread) {
     Recoil.tickThread = true;
     setTick(() => {
+      if (!Recoil.firearm) return;
+
       Recoil.checkShooting();
-      Recoil.checkMovement();
+      Recoil.checkVehicle();
     });
   }
 
@@ -91,7 +102,10 @@ on('playerSpawned', () => {
   
   Recoil.interval = setInterval(() => {
     Recoil.checkWeapon();
-    //Recoil.checkMovement();
+    
+    if (!Recoil.firearm) return;
+
+    Recoil.checkMovement();
   }, 250);
 });
 
