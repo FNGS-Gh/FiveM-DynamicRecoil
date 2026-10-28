@@ -21,12 +21,6 @@ export class Firearm {
 
     this.baseRecoil = recoil * amplifier;
     this.recoil = this.baseRecoil;
-
-    console.log(
-      `Group: ${this.group}`,
-      `FireRate: ${this.fireRate}`,
-      `Recoil: ${this.baseRecoil}`
-    );
   }
 
   private set recoil(recoil: number) {
@@ -35,8 +29,6 @@ export class Firearm {
     if (this._recoil !== normal) {
       this._recoil = normal;
       SetWeaponRecoilShakeAmplitude(this.hash, normal);
-      
-      console.log(`Recoil: ${normal}`);
     }
   }
 

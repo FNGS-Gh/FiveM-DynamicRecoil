@@ -27,15 +27,12 @@ class BurstHandler {
     
       this.tokens++;
 
-      console.log(`Token refilled: ${this.tokens}`);
-
       if (this.tokens < Tokens.MAX) this.scheduleRefill();
     }, Tokens.REFILL_MS);
   }
 
   applyFirearm(fireRate: number) {
     this.usageCdMs = Math.floor(100 / fireRate);
-    console.log(`UsageCdMs: ${this.usageCdMs}`);
   }
 
   useToken(): number {
@@ -48,8 +45,6 @@ class BurstHandler {
     ) {
       this.lastUsage = now;
       this.tokens--;
-
-      console.log(`Token used: ${this.tokens}`);
 
       this.scheduleRefill();
     }
